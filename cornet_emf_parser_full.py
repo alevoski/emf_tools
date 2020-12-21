@@ -1,18 +1,23 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# cornet_emf_parser_full.py
+#cornet_emf_parser_full.py
+#@Alexandre Buissé - 2020
 
-# To open serial port and read data, tested with Cornet ED88Tplus
-# Like sudo minicom -D /dev/ttyUSB0 with (speed) 9600, (data) 8bit, (parity) no parity, (stopbits) 1 stop
+'''
+cornet_emf_parser_full.py is a script to read and parse output from an EMF device USB serial port.
+It has been tested with a Cornet ED88Tplus.
+'''
 
+#Standard imports
 import re
 import sys
 import datetime
 import argparse
 
+#Third party import
 try:
     import serial
-except Exception:
+except ModuleNotFoundError:
     print('You need to install pyserial to run this script !')
     print('Try : pip3 install pyserial')
     sys.exit()
@@ -66,7 +71,7 @@ def transforme_val(freq_val_temp, freq_val_num_after_comma):
 
     before_comma = freq_val_temp[:before]
     # print('before_comma ' + str(before_comma))
-    if before == 0 and len(before_comma) == 0:
+    if before == 0 and not before_comma:
         before_comma = '0'
     after_comma = freq_val_temp[-after:]
     new_val = before_comma + '.' + after_comma
@@ -81,7 +86,7 @@ def parse_data(raw_line):
     # Define regex
     freq_val_regex = '(.*)E'
     freq_val_after_comma_regex = 'E-(.*),'
-    freq_regex = ',(\d\d\d\d)'
+    freq_regex = r',(\d\d\d\d)'
 
     # Decode bytes and strip leading and trailing spaces
     line = raw_line.decode().strip()
@@ -108,6 +113,9 @@ def save_to_file(csvfile, line):
         newfile.write(line + '\n')
 
 def show_info(source, out, alarm, target, fmin, fmax):
+    '''
+    Display output with vars in parameter
+    '''
     print('**Reading data from your device** (stop with CTRL+Z)')
     print('source : ' + source)
     if out:
@@ -125,13 +133,16 @@ def show_info(source, out, alarm, target, fmin, fmax):
         print('fmax : ' + fmax)
 
 def main(source="/dev/ttyUSB0", out=None, alarm=None, target=None, fmin=None, fmax=None):
+    '''
+    Main function
+    '''
     try:
         port = serial.Serial(source, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=3.0)
-    except serial.serialutil.SerialException as e:
-        print(e)
-        if "No such file or directory" in str(e):
+    except serial.serialutil.SerialException as serial_exception:
+        print(serial_exception)
+        if "No such file or directory" in str(serial_exception):
             print('Device could not be opened, is it plug ?')
-        elif "Permission denied" in str(e):
+        elif "Permission denied" in str(serial_exception):
             print('Permission denied : you need to put your username in "tty" and "dialout" groups !')
             print('Try : sudo usermod -a -G tty $USER')
             print('Try : sudo usermod -a -G dialout $USER')
@@ -143,6 +154,7 @@ def main(source="/dev/ttyUSB0", out=None, alarm=None, target=None, fmin=None, fm
             show_info(source, out, alarm, target, fmin, fmax)
             while True:
                 raw_line = port_serie.readline()
+                # print('raw : ' + str(raw_line))
                 timestamp = get_timestamp()
                 freq_val, freq = parse_data(raw_line)
 
@@ -188,11 +200,12 @@ def main(source="/dev/ttyUSB0", out=None, alarm=None, target=None, fmin=None, fm
                 if out and store_line:
                     save_to_file(out, tosave)
 
-description = '''
-This script will help you read and parse Cornet EMF detector raw data from pyserial output
-Tested on Cornet ED88Tplus'''
+DESCRIPTION = '''
+    This script will help you read and parse Cornet EMF detector raw data from pyserial output
+    Tested on Cornet ED88Tplus
+'''
 
-examples = '''Examples :
+EXAMPLES = '''Examples :
     cornet_emf_parser_full.py --source=/dev/ttyUSB1
     cornet_emf_parser_full.py --output=test_output
     cornet_emf_parser_full.py --alarm=0.352
@@ -202,19 +215,18 @@ examples = '''Examples :
     cornet_emf_parser_full.py -a=0.352 -t=2400
     cornet_emf_parser_full.py -a=0.352 -n=52 -x=2800
     cornet_emf_parser_full.py -a=0.352 -t=2400 -o=test_output
-
 '''
 
-parser = argparse.ArgumentParser(prog='cornet_emf_parser_full.py',
-        description=description, epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-parser.add_argument('-s','--source', help='Your device source (see dmesg | grep tty) (default is /dev/ttyUSB0)', required=False, default='/dev/ttyUSB0')
-parser.add_argument('-o','--output', help='Filename of your output file if you want to save data', required=False, default=None)
-parser.add_argument('-a','--alarm', help='Frequency value limit which will enable a data to be keep', required=False, default=None)
-parser.add_argument('-t','--target', help='Target frequency (ie : 720)', required=False, default=None)
-parser.add_argument('-n','--fmin', help='Minimum frequency to target (ie : 700)', required=False, default=None)
-parser.add_argument('-x','--fmax', help='Maximum frequency to target (ie : 2600)', required=False, default=None)
-# args = vars(parser.parse_args())
-args = parser.parse_args()
+PARSER = argparse.ArgumentParser(prog='cornet_emf_parser_full.py',
+                                 description=DESCRIPTION, epilog=EXAMPLES,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+PARSER.add_argument('-s', '--source', help='Your device source (see dmesg | grep tty) (default is /dev/ttyUSB0)', required=False, default='/dev/ttyUSB0')
+PARSER.add_argument('-o', '--output', help='Filename of your output file if you want to save data', required=False, default=None)
+PARSER.add_argument('-a', '--alarm', help='Frequency value limit which will enable a data to be keep', required=False, default=None)
+PARSER.add_argument('-t', '--target', help='Target frequency (ie : 720)', required=False, default=None)
+PARSER.add_argument('-n', '--fmin', help='Minimum frequency to target (ie : 700)', required=False, default=None)
+PARSER.add_argument('-x', '--fmax', help='Maximum frequency to target (ie : 2600)', required=False, default=None)
 
-main(args.source, args.output, args.alarm, args.target, args.fmin, args.fmax)
+ARGS = PARSER.parse_args()
+
+main(ARGS.source, ARGS.output, ARGS.alarm, ARGS.target, ARGS.fmin, ARGS.fmax)
