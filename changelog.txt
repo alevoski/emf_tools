@@ -1,9 +1,0 @@
-21/12/2020
-  Update licence
-  Update readme
-  Add this changelog
-  cornet_emf_parser_full.py static analysis (# pylint3 --disable=line-too-long) with code cleaning and minor corrections
-    Score : 9.67/10
-
-19/12/2020 to 20/12/2020
-    First commits
