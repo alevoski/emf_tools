@@ -154,6 +154,9 @@ def main(source="/dev/ttyUSB0", out=None, alarm=None, target=None, fmin=None, fm
             show_info(source, out, alarm, target, fmin, fmax)
             while True:
                 raw_line = port_serie.readline()
+                if not raw_line: # if nothing until timeout : break
+                    print('No data returned from your device : are you in RF mode ?')
+                    break
                 # print('raw : ' + str(raw_line))
                 timestamp = get_timestamp()
                 freq_val, freq = parse_data(raw_line)
@@ -201,8 +204,8 @@ def main(source="/dev/ttyUSB0", out=None, alarm=None, target=None, fmin=None, fm
                     save_to_file(out, tosave)
 
 DESCRIPTION = '''
-    This script will help you read and parse Cornet EMF detector raw data from pyserial output
-    Tested on Cornet ED88Tplus
+This script will help you read and parse Cornet EMF detector raw data RF output from its USB Serial interface with pyserial
+Tested on Cornet ED88Tplus
 '''
 
 EXAMPLES = '''Examples :
