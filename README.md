@@ -36,8 +36,8 @@ pip install -r requirements.txt
 
 #### Put your username in "tty" and "dialout" groups
 ```
-sudo usermod -a -G tty $USER')
-sudo usermod -a -G dialout $USER')
+sudo usermod -a -G tty $USER
+sudo usermod -a -G dialout $USER
 ```
 You must logout after this operations !
 
